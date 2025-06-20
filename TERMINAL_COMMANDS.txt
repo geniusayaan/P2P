@@ -1,0 +1,15 @@
+mkdir p2pshare
+cd p2pshare
+npm init -y
+
+
+
+npm install express socket.io
+
+
+
+npm create vite@latest p2pshare-client
+cd p2pshare-client
+npm install
+npm install socket.io-client
+npm run dev
