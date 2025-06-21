@@ -1,19 +1,48 @@
 import React, { useState, useEffect, useRef } from "react";
 import { io } from "socket.io-client";
 
-const socket = io("http://192.168.1.7:3000"); // Replace with IP for LAN testing
+//here the port has to be of backend and IP is same
+const socket = io("http://192.168.1.13:3000"); // Replace with IP for LAN testing
 
 function App() {
   const [input, setInput] = useState("");
+  const [typing, setTyping] = useState({typing:false, typer:""});
   const [messages, setMessages] = useState([]);
   const messageEndRef = useRef();
 
   const sendMessage = () => {
     if (!input) return;
     socket.emit("send-message", { message: input });
+    
     setMessages((prev) => [...prev, { message: input, from: "You" }]);
     setInput("");
   };
+
+  
+
+useEffect(() => {
+  let typingTimeout;
+
+  const handleTyping = (typer) => {
+    setTyping({typing:true,typer:typer});
+
+    clearTimeout(typingTimeout);
+    typingTimeout = setTimeout(() => {
+      setTyping(false);
+    }, 3000); // 3 seconds
+  };
+
+  socket.on("typing", (data)=>{
+    handleTyping(data.typer)
+  });
+
+  return () => {
+    socket.off("typing", handleTyping);
+    clearTimeout(typingTimeout);
+  };
+}, []);
+
+
 
   useEffect(() => {
     socket.on("receive-message", (data) => {
@@ -46,14 +75,23 @@ function App() {
             <span>{msg.message}</span>
           </div>
         ))}
+
         <div ref={messageEndRef} />
+
+{typing.typing && <p style={{ fontStyle: "italic", fontSize: "13px" }}>💬 {typing.typer} is typing...</p>}
+
+
+
       </div>
 
       <div style={styles.inputRow}>
         <input
           type="text"
           value={input}
-          onChange={(e) => setInput(e.target.value)}
+          onChange={(e) => {
+            setInput(e.target.value)
+           socket.emit("typing");
+          } }
           placeholder="Type your message..."
           style={styles.input}
         />

@@ -22,6 +22,7 @@ const io = new Server(server, {
 io.on("connection", (socket) => {
   console.log("✅ New user connected:", socket.id);
 
+
   socket.on("send-message", (data) => {
     console.log("📨 Message from", socket.id, ":", data);
 
@@ -32,11 +33,19 @@ io.on("connection", (socket) => {
     });
   });
 
+  socket.on("typing", () => {
+  socket.broadcast.emit("typing",{
+    typer:socket.id
+  }); // don’t send to self
+});
+
+
   socket.on("disconnect", () => {
     console.log("❌ User disconnected:", socket.id);
   });
 });
 
 server.listen(3000, () => {
+// const socket = io("http://192.168.31.246:3000"); // Replace with IP for LAN testing
   console.log("🚀 Server running at http://192.168.1.7:3000");
 });
